@@ -20,4 +20,3 @@ class PresentationDownloadRequest(BaseModel):
 class PresentationDownloadResponse(BaseModel):
     message: str
     status: Literal["Completed", "Pending", "Error"]
-    file_url: str
