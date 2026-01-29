@@ -20,6 +20,17 @@ class PlannerAgent:
         self.retry_count = 0
 
     async def create_presentation_plan(self, payload: PresentationPayload) -> PresentationPlan:
+        """Creates a presentation plan based on the topic and number of slides.
+
+        Args:
+            payload (PresentationPayload): The payload containing the topic and number of slides.
+
+        Raises:
+            e: The error that occurred.
+
+        Returns:
+            PresentationPlan: The presentation plan.
+        """
         try:
             response = await self.client.beta.chat.completions.parse(
                 model=self.model,
@@ -38,6 +49,19 @@ class PlannerAgent:
             raise e
 
     async def _validate_response(self, plan: PresentationPlan | None, payload: PresentationPayload) -> PresentationPlan:
+        """Validates the response from the agent with a retry mechanism which calls the create_presentation_plan method if the response is None.
+
+        Args:
+            plan (PresentationPlan | None): The presentation plan from the agent.
+            payload (PresentationPayload): The payload containing the topic and number of slides.
+
+        Raises:
+            ValueError: If the response from the agent is None and the retry count is less than 3.
+            ValueError: If the number of slides in the presentation plan does not match the number of slides requested.
+
+        Returns:
+            PresentationPlan: The presentation plan.
+        """
         if plan is None:
             if self.retry_count < 3:
                 self.retry_count += 1
