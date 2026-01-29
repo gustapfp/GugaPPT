@@ -6,6 +6,7 @@ from app.routes.presentation.utils import generate_pprt_id
 from app.routes.presentation.schemas import PresentationDownloadResponse, PresentationRequest, PresentationResponse
 from mcp_server.workflow import main_workflow
 from core.consts import FILE_PATH
+from mcp_server.tools import search_web, create_presentation
 
 presentation_router = APIRouter(
     prefix="/presentation",
@@ -61,3 +62,22 @@ async def download_ppt(pprt_id: str) -> FileResponse | PresentationDownloadRespo
             message="Presentation not found. Please check the presentation ID and try again in a few minutes.",
             status="Pending",
         )
+
+
+@presentation_router.get("/test")
+async def test() -> str:
+    print("--- Testing Search ---")
+    results = search_web("latest advancements in solid state batteries")
+    print(results)
+
+    # 2. Test PPT Generation
+    print("\n--- Testing PPT Generation ---")
+    mock_slides = """
+    [
+        {"title": "Solid State Batteries", "points": ["Higher energy density", "Safer than Li-ion"]},
+        {"title": "Challenges", "points": ["Manufacturing costs", "Interface stability"]}
+    ]
+    """
+    result = create_presentation("test_deck", mock_slides)
+    print(result)
+    return "Tests completed successfully!"
