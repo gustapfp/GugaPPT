@@ -7,6 +7,11 @@ from app.routes.presentation.schemas import PresentationDownloadResponse, Presen
 from mcp_server.workflow import main_workflow
 from core.consts import FILE_PATH
 from mcp_server.tools import search_web, create_presentation
+from mcp_server.agents.planner.agent import PlannerAgent
+from mcp_server.agents.planner.schemas import PresentationPayload
+from structlog import get_logger
+
+logger = get_logger()
 
 presentation_router = APIRouter(
     prefix="/presentation",
@@ -66,18 +71,9 @@ async def download_ppt(pprt_id: str) -> FileResponse | PresentationDownloadRespo
 
 @presentation_router.get("/test")
 async def test() -> str:
-    print("--- Testing Search ---")
-    results = search_web("latest advancements in solid state batteries")
-    print(results)
-
-    # 2. Test PPT Generation
-    print("\n--- Testing PPT Generation ---")
-    mock_slides = """
-    [
-        {"title": "Solid State Batteries", "points": ["Higher energy density", "Safer than Li-ion"]},
-        {"title": "Challenges", "points": ["Manufacturing costs", "Interface stability"]}
-    ]
-    """
-    result = create_presentation("test_deck", mock_slides)
-    print(result)
-    return "Tests completed successfully!"
+    agent = PlannerAgent()
+    plan = await agent.create_presentation_plan(
+        PresentationPayload(topic="The Future of Solid State Batteries", num_slides=3)
+    )
+    logger.info(f"Test completed successfully! Plan: {plan.model_dump_json(indent=2)}")
+    return "Test completed successfully!"
