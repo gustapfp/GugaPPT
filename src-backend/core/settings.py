@@ -1,9 +1,7 @@
 from typing import Optional
 from pydantic_settings import BaseSettings
-from structlog import get_logger
+from core.logger_config import logger
 from pathlib import Path
-
-logger = get_logger()
 
 _env_path = Path(__file__).resolve().parent.parent.parent / ".env"
 

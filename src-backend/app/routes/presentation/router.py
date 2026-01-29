@@ -6,12 +6,10 @@ from app.routes.presentation.utils import generate_pprt_id
 from app.routes.presentation.schemas import PresentationDownloadResponse, PresentationRequest, PresentationResponse
 from mcp_server.workflow import main_workflow
 from core.consts import FILE_PATH
-from mcp_server.tools import search_web, create_presentation
+from mcp_server.mcp_server import search_web, create_presentation
 from mcp_server.agents.planner.agent import PlannerAgent
 from mcp_server.agents.planner.schemas import PresentationPayload
-from structlog import get_logger
-
-logger = get_logger()
+from core.logger_config import logger
 
 presentation_router = APIRouter(
     prefix="/presentation",
