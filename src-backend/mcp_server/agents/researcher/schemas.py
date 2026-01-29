@@ -8,6 +8,7 @@ class Fact(BaseModel):
     source_url: str = Field(description=" The URL where this fact was found")
 
 
+# TODO: Add the raw_facts
 class ResearchSummary(BaseModel):
     slide_topic: str
     facts: List[Fact] = Field(description="A curated list of facts relevant to this slide")
