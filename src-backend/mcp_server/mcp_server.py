@@ -1,13 +1,16 @@
-from mcp.server.fastmcp import FastMCP
-
-from typing import Literal
-from pptx import Presentation
 import json
-from core.consts import DOMAIN_BLACKLIST, FILE_PATH
+from datetime import datetime
+from typing import Literal
+
+import numpy as np
+from matplotlib import pyplot as plt
+from mcp.server.fastmcp import FastMCP
+from pptx import Presentation
 from tavily import TavilyClient  # type: ignore
+
+from core.consts import DOMAIN_BLACKLIST, FILE_PATH
 from core.logger_config import logger
 from core.settings import settings
-
 
 mcp_server = FastMCP("PPT-Generator-Tools")
 
@@ -27,7 +30,9 @@ def search_web(query: str, search_depth: Literal["basic", "advanced"] = "basic")
     Returns:
         str: The information searched for.
     """
-    logger.info(f"Search Web Tool was triggered with query: {query}. Searching the web for information...")
+    logger.info(
+        f"Search Web Tool was triggered with query: {query}. Searching the web for information..."
+    )
     try:
         response = tavily_client.search(
             query=query,
@@ -72,7 +77,7 @@ def create_presentation(filename: str, slides_content: str) -> str:
 
             # -- Body --
             body_shape = slide.placeholders[1]
-            tf = getattr(body_shape, "text_frame")
+            tf = body_shape.text_frame
             for point in slide_data.get("points", []):
                 p = tf.add_paragraph()
                 p.text = point
@@ -83,6 +88,81 @@ def create_presentation(filename: str, slides_content: str) -> str:
         return f"Successfully saved presentation to {path}"
     except Exception as e:
         return f"Error creating PPT: {str(e)}"
+
+
+@mcp_server.tool(
+    name="generate_visual_assets",
+    description="Generate visual assets for the presentation.",
+)
+def generate_chart(data_json: str, chart_type: str, title: str) -> str:
+    """
+    Generates a statistical chart (bar, pie, or line) and saves it as a PNG image.
+
+    Args:
+        data_json: A JSON string containing 'labels' (list) and 'values' (list).
+                   Example: '{"labels": ["Q1", "Q2"], "values": [100, 150]}'
+        chart_type: The type of chart to generate. Options: "bar", "pie", "line".
+        title: The title of the chart.
+
+    Returns:
+        The file path of the generated image.
+    """
+    logger.info(
+        f"Generate Visual Assets Tool was triggered with data_json: {data_json}, chart_type: {chart_type}, title: {title}"
+    )
+    try:
+        data = json.loads(data_json)
+        labels = data.get("labels", [])
+        values = data.get("values", [])
+
+        if not labels or not values:
+            raise ValueError("Error: JSON must contain 'labels' and 'values' lists.")
+
+        if len(labels) != len(values):
+            raise ValueError("Error: 'labels' and 'values' must have the same length.")
+
+        plt.figure(figsize=(10, 6))
+
+        if chart_type.lower() == "bar":
+            plt.bar(labels, values, color="#4F81BD")
+            plt.xlabel("Categories")
+            plt.ylabel("Values")
+
+        elif chart_type.lower() == "line":
+            plt.plot(labels, values, marker="o", linestyle="-", color="#C0504D", linewidth=2)
+            plt.grid(True, linestyle="--", alpha=0.7)
+
+        elif chart_type.lower() == "pie":
+            cmap = plt.get_cmap("Paired")
+            rgba = cmap(np.linspace(0, 1, len(values)))
+            colors = [tuple(rgba[i]) for i in range(len(values))]
+            plt.pie(
+                values,
+                labels=labels,
+                autopct="%1.0f%%",
+                startangle=90,
+                colors=colors,
+            )
+        else:
+            return f"Error: Unsupported chart type '{chart_type}'. Use 'bar', 'pie', or 'line'."
+
+        plt.title(title)
+
+        safe_title = "".join(c if c.isalnum() else "_" for c in title)
+        timestamp = int(datetime.now().timestamp())
+        filename = f"chart_{safe_title}_{timestamp}.png"
+        path = FILE_PATH / "charts" / filename
+        path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(path, bbox_inches="tight", dpi=100)
+        plt.close()
+
+        print(f"DEBUG: Saved chart to {path}")
+        return str(path)
+
+    except json.JSONDecodeError:
+        return "Error: Invalid JSON string provided."
+    except Exception as e:
+        return f"Error generating chart: {str(e)}"
 
 
 if __name__ == "__main__":

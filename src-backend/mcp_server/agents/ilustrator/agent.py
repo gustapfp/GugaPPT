@@ -1,6 +1,5 @@
-from typing import List
 from mcp import ClientSession
-from mcp.types import TextContent
+
 from openai import AsyncOpenAI
 from core.settings import settings
 from core.logger_config import logger

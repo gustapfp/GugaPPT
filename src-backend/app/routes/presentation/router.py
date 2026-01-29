@@ -1,15 +1,18 @@
 import os
+
 from fastapi import APIRouter, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
+
+from app.routes.presentation.schemas import (
+    PresentationDownloadResponse,
+    PresentationRequest,
+    PresentationResponse,
+)
 from app.routes.presentation.utils import generate_pprt_id
-from app.routes.presentation.schemas import PresentationDownloadResponse, PresentationRequest, PresentationResponse
-from mcp_server.workflow import main_workflow
 from core.consts import FILE_PATH
-from mcp_server.mcp_server import search_web, create_presentation
-from mcp_server.agents.planner.agent import PlannerAgent
-from mcp_server.agents.planner.schemas import PresentationPayload
-from core.logger_config import logger
+from mcp_server.mcp_server import generate_chart
+from mcp_server.workflow import main_workflow
 
 presentation_router = APIRouter(
     prefix="/presentation",
@@ -18,7 +21,9 @@ presentation_router = APIRouter(
 
 
 @presentation_router.post("/generate_ppt", status_code=202)
-async def generate_ppt(request: PresentationRequest, background_tasks: BackgroundTasks) -> PresentationResponse:
+async def generate_ppt(
+    request: PresentationRequest, background_tasks: BackgroundTasks
+) -> PresentationResponse:
     """
     Generate a PowerPoint presentation based on the given topic and number of slides. The endpoint accepts a topic
     and triggers
@@ -40,7 +45,7 @@ async def generate_ppt(request: PresentationRequest, background_tasks: Backgroun
         raise HTTPException(
             status_code=422,
             detail=f"Validation error: Invalid request parameters. Please check the request and try again. Error: {e.errors()}",
-        )
+        ) from e
     except Exception as e:
         return PresentationResponse(
             message=f"Error generating presentation: {e}",
@@ -68,10 +73,14 @@ async def download_ppt(pprt_id: str) -> FileResponse | PresentationDownloadRespo
 
 
 @presentation_router.get("/test")
-async def test() -> str:
-    agent = PlannerAgent()
-    plan = await agent.create_presentation_plan(
-        PresentationPayload(topic="The Future of Solid State Batteries", num_slides=3)
-    )
-    logger.info(f"Test completed successfully! Plan: {plan.model_dump_json(indent=2)}")
-    return "Test completed successfully!"
+async def test() -> None:
+    # Mock data usually provided by the Illustrator/Writer agent
+    test_data = '{"labels": ["2024", "2025", "2026"], "values": [1.5, 4.2, 8.9]}'
+
+    print("Testing Bar Chart...")
+    path = generate_chart(test_data, "bar", "AI Market Growth (Billions)")
+    print(f"Generated: {path}")
+
+    print("\nTesting Pie Chart...")
+    path_pie = generate_chart(test_data, "pie", "Market Share Distribution")
+    print(f"Generated: {path_pie}")
