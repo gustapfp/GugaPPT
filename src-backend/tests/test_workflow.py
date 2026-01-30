@@ -1,7 +1,12 @@
 import json
+import os
+import tempfile
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from fastapi.testclient import TestClient
+from pptx import Presentation as PptxPresentation
 
 
 class TestSourceValidator:
@@ -386,6 +391,112 @@ class TestIllustratorAgent:
         result = await agent.create_visuals(visual_requests, mock_session)
 
         assert len(result.assets) == 0
+
+
+class TestMcpServerTools:
+    """Tests for MCP server tools."""
+
+    @pytest.mark.parametrize("chart_type", ["bar", "line", "pie"])
+    def test_generate_chart_valid_types(self, chart_type):
+        """Test chart generation for all valid types."""
+        from mcp_server.mcp_server import generate_chart
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            patch("mcp_server.mcp_server.FILE_PATH", Path(tmpdir)),
+        ):
+            data_json = json.dumps({"labels": ["A", "B", "C"], "values": [10, 20, 30], "unit": "X"})
+            result = generate_chart(data_json, chart_type, f"Test {chart_type}")
+            assert "chart_" in result and result.endswith(".png")
+
+    def test_create_presentation(self):
+        """Test presentation creation (success and error)."""
+        from mcp_server.mcp_server import create_presentation
+
+        assert "Error" in create_presentation("test", "not valid json")
+
+        with (
+            tempfile.TemporaryDirectory() as tmpdir,
+            patch("mcp_server.mcp_server.FILE_PATH", Path(tmpdir)),
+        ):
+            slides = json.dumps(
+                [{"title": "Slide", "points": ["Point"], "speaker_notes": None, "sources": None}]
+            )
+            result = create_presentation("test_ppt", slides)
+            assert "Successfully saved" in result
+            assert os.path.exists(Path(tmpdir) / "test_ppt.pptx")
+
+    @patch("mcp_server.mcp_server.tavily_client")
+    @patch("mcp_server.mcp_server.source_validator")
+    def test_search_web(self, mock_validator, mock_tavily):
+        """Test web search with various scenarios."""
+        from mcp_server.mcp_server import search_web
+
+        mock_tavily.search.return_value = {
+            "results": [{"content": "Content", "url": "https://example.com"}]
+        }
+        mock_validator.rank_sources.return_value = [
+            {
+                "content": "Content",
+                "url": "https://example.com",
+                "validation": {"tier": "S", "score": 90},
+            }
+        ]
+        result = json.loads(search_web("query"))
+        assert len(result) == 1 and result[0]["validation"]["tier"] == "S"
+
+        mock_validator.rank_sources.return_value = [
+            {"content": "Low", "url": "https://bad.com", "validation": {"tier": "C", "score": 30}}
+        ]
+        assert json.loads(search_web("query")) == []
+
+        mock_tavily.search.side_effect = Exception("API Error")
+        assert "Error" in search_web("query")
+
+
+class TestPresentationRoutes:
+    """Tests for presentation API routes."""
+
+    @pytest.fixture
+    def client(self):
+        """Create test client."""
+        from fastapi import FastAPI
+
+        from app.routes.presentation.router import presentation_router
+
+        app = FastAPI()
+        app.include_router(presentation_router)
+        return TestClient(app)
+
+    def test_generate_ppt_success(self, client):
+        """Test successful presentation generation."""
+        with patch("app.routes.presentation.router.run_ppt_workflow"):
+            response = client.post(
+                "/presentation/generate_ppt",
+                json={"topic": "AI Trends", "slides": 5},
+            )
+
+            assert response.status_code == 202
+            data = response.json()
+            assert data["status"] == "Success"
+            assert "pprt_id" in data
+            assert "AI_Trends" in data["pprt_id"]
+
+    def test_download_ppt_found(self, client):
+        """Test downloading existing presentation."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            test_path = Path(tmpdir) / "test-123.pptx"
+            prs = PptxPresentation()
+            prs.save(str(test_path))
+
+            with patch("app.routes.presentation.router.FILE_PATH", Path(tmpdir)):
+                response = client.get("/presentation/download/test-123")
+
+                assert response.status_code == 200
+                assert (
+                    response.headers["content-type"]
+                    == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                )
 
 
 if __name__ == "__main__":
