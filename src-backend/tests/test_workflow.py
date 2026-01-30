@@ -334,5 +334,59 @@ class TestWriterAgent:
             await agent._validate_response(content, "Test", {}, [])
 
 
+class TestIllustratorAgent:
+    """Tests for IllustratorAgent."""
+
+    @pytest.mark.asyncio
+    async def test_create_visuals_chart(self):
+        """Test creating chart visuals."""
+        from mcp_server.agents.illustrator.agent import IllustratorAgent
+
+        agent = IllustratorAgent()
+        mock_session = AsyncMock()
+
+        mock_result = MagicMock()
+        mock_result.content = [MagicMock(text="/path/to/chart.png")]
+        mock_session.call_tool.return_value = mock_result
+
+        visual_requests = [
+            {
+                "slide_number": 0,
+                "type": "chart",
+                "prompt": "Revenue Chart",
+                "data_json": {"labels": ["Q1", "Q2"], "values": [100, 200], "unit": "USD"},
+            }
+        ]
+
+        result = await agent.create_visuals(visual_requests, mock_session)
+
+        assert len(result.assets) == 1
+        assert result.assets[0].slide_number == 0
+        assert result.assets[0].asset_type == "chart"
+        assert result.assets[0].file_path == "/path/to/chart.png"
+
+    @pytest.mark.asyncio
+    async def test_create_visuals_handles_exception(self):
+        """Test create_visuals handles exceptions gracefully."""
+        from mcp_server.agents.illustrator.agent import IllustratorAgent
+
+        agent = IllustratorAgent()
+        mock_session = AsyncMock()
+        mock_session.call_tool.side_effect = Exception("Tool error")
+
+        visual_requests = [
+            {
+                "slide_number": 0,
+                "type": "chart",
+                "prompt": "Chart",
+                "data_json": {"labels": ["A"], "values": [1], "unit": "X"},
+            }
+        ]
+
+        result = await agent.create_visuals(visual_requests, mock_session)
+
+        assert len(result.assets) == 0
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "--tb=short"])
