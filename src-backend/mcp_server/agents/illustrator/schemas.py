@@ -1,5 +1,4 @@
 from pydantic import BaseModel, Field
-from typing import List
 
 
 class VisualAsset(BaseModel):
@@ -10,4 +9,4 @@ class VisualAsset(BaseModel):
 
 
 class IllustrationResult(BaseModel):
-    assets: List[VisualAsset]
+    assets: list[VisualAsset]

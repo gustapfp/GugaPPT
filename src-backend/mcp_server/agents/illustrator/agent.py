@@ -3,10 +3,10 @@ from openai import AsyncOpenAI
 
 from core.logger_config import logger
 from core.settings import settings
-from mcp_server.agents.ilustrator.schemas import IllustrationResult, VisualAsset
+from mcp_server.agents.illustrator.schemas import IllustrationResult, VisualAsset
 
 
-class IlustratorAgent:
+class IllustratorAgent:
     """
     A ilustrator agent that generates visual assets for the presentation.
     """
