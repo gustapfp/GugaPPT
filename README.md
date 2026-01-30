@@ -4,6 +4,7 @@ GenAI take-home assignment: an application that generates PowerPoint presentatio
 
 
 On the **Home page** (`http://localhost:8000/`), you can use a simple web interface to generate presentations interactively by entering a topic and choosing the number of slides. Once submitted, the generated PowerPoint file can be downloaded directly from the same page when ready.
+![Uploading image.png…]()
 
 ---
 
