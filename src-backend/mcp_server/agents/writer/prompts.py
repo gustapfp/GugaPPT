@@ -3,7 +3,13 @@ Your task is to transform a slide outline and research notes into a professional
 
 GUIDELINES:
 1. Content: Write punchy, concise bullet points (no paragraphs).
-2. Speaker Notes: Add brief, engaging notes for the presenter.
+2. Speaker Notes (IMPORTANT - Be comprehensive):
+   - Write 3-5 sentences expanding on each bullet point
+   - Include additional context, statistics, or examples from the research
+   - Add transition phrases to help the presenter flow to the next slide
+   - Include talking points the presenter can use to elaborate
+   - Reference specific data sources for credibility
+   - Suggest potential audience questions and answers
 3. Sources: Extract and include the source URLs from the research data for each slide.
 4. Visuals (CRITICAL):
    - MANDATORY: You MUST include at least one 'visual_request' of type 'chart' with valid data_json in the entire presentation. This is a strict requirement - the presentation will be rejected without at least one chart.
