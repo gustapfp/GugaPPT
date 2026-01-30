@@ -14,6 +14,7 @@ from tavily import TavilyClient  # type: ignore
 from core.consts import DOMAIN_BLACKLIST, FILE_PATH
 from core.logger_config import logger
 from core.settings import settings
+from mcp_server.helper.source_validator import source_validator
 
 mcp_server = FastMCP("PPT-Generator-Tools")
 
@@ -24,7 +25,7 @@ tavily_client = TavilyClient(api_key=settings.TAVILY_API_KEY)
     name="search_web",
     description="Search the web for information",
 )
-def search_web(query: str, search_depth: Literal["basic", "advanced"] = "basic") -> str:
+def search_web(query: str, search_depth: Literal["basic", "advanced"] = "advanced") -> str:
     """Search the web for information based on the given query.
 
     Args:
@@ -33,19 +34,27 @@ def search_web(query: str, search_depth: Literal["basic", "advanced"] = "basic")
     Returns:
         str: The information searched for.
     """
-    logger.info(
-        f"Search Web Tool was triggered with query: {query}. Searching the web for information..."
-    )
+    logger.info("Searching the web for information...")
     try:
         response = tavily_client.search(
             query=query,
             search_depth=search_depth,
-            max_results=3,
+            max_results=10,
             exclude_domains=DOMAIN_BLACKLIST,
+            chunks_per_source=3,
         )
 
         context = [{"content": r["content"], "url": r["url"]} for r in response.get("results", [])]
-        return json.dumps(context)
+        logger.info(f"Context: {context}")
+        ranked_results = source_validator.rank_sources(context)
+        high_quality_results = [
+            res for res in ranked_results if res["validation"]["tier"] in ["S", "A"]
+        ]
+        if not high_quality_results:
+            logger.warning(f"No Tier S/A results found for '{query}'. Returning empty list.")
+            return json.dumps([])
+        logger.info(f"Returning {len(high_quality_results)} high-quality results for '{query}'")
+        return json.dumps(high_quality_results, indent=2)
     except Exception as e:
         return f"Error searching web: {str(e)}"
 
