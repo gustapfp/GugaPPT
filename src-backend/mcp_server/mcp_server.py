@@ -251,7 +251,6 @@ def generate_chart(data_json: str, chart_type: str, title: str) -> str:
         plt.savefig(path, bbox_inches="tight", dpi=100)
         plt.close()
 
-        print(f"DEBUG: Saved chart to {path}")
         return str(path)
 
     except json.JSONDecodeError:
