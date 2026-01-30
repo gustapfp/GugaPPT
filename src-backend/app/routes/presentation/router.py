@@ -41,7 +41,7 @@ async def generate_ppt(
         return PresentationResponse(
             message="Presentation generation task created successfully! To retrieve the presentation, please use the pprt_id in the response.",
             status="Success",
-            pprt_id=generate_pprt_id(request.topic),
+            pprt_id=pprt_id,
         )
     except ValidationError as e:
         raise HTTPException(

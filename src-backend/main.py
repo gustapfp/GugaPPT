@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.routes.presentation.router import presentation_router
 
+from app.routes.presentation.router import presentation_router
 
 api = FastAPI(
     title="Presentation Generator API",
