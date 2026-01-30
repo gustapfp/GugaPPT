@@ -1,8 +1,9 @@
-from mcp_server.agents.planner.schemas import PresentationPayload, PresentationPlan
-from mcp_server.agents.planner.prompts import SYSTEM_PROMPT, USER_PROMPT
 from openai import AsyncOpenAI
-from core.settings import settings
+
 from core.logger_config import logger
+from core.settings import settings
+from mcp_server.agents.planner.prompts import SYSTEM_PROMPT, USER_PROMPT
+from mcp_server.agents.planner.schemas import PresentationPayload, PresentationPlan
 
 
 class PlannerAgent:
@@ -32,7 +33,12 @@ class PlannerAgent:
                 model=self.model,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": USER_PROMPT.format(topic=payload.topic, num_slides=payload.num_slides)},
+                    {
+                        "role": "user",
+                        "content": USER_PROMPT.format(
+                            topic=payload.topic, num_slides=payload.num_slides
+                        ),
+                    },
                 ],
                 response_format=PresentationPlan,
             )
@@ -44,7 +50,9 @@ class PlannerAgent:
             )
             raise e
 
-    async def _validate_response(self, plan: PresentationPlan | None, payload: PresentationPayload) -> PresentationPlan:
+    async def _validate_response(
+        self, plan: PresentationPlan | None, payload: PresentationPayload
+    ) -> PresentationPlan:
         """Validates the response from the agent with a retry mechanism which calls the create_presentation_plan method if the response is None.
 
         Args:
@@ -67,5 +75,7 @@ class PlannerAgent:
             logger.warning(
                 f"Number of slides in the presentation plan does not match the number of slides requested. Expected {payload.num_slides}, got {len(plan.slides)}"
             )
-            raise ValueError("Number of slides in the presentation plan does not match the number of slides requested")
+            raise ValueError(
+                "Number of slides in the presentation plan does not match the number of slides requested"
+            )
         return plan

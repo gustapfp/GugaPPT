@@ -1,3 +1,4 @@
+import json
 import os
 
 from fastapi import APIRouter, BackgroundTasks, HTTPException
@@ -11,7 +12,8 @@ from app.routes.presentation.schemas import (
 )
 from app.routes.presentation.utils import generate_pprt_id
 from core.consts import FILE_PATH
-from mcp_server.mcp_server import get_stock_image
+from core.logger_config import logger
+from mcp_server.mcp_server import search_web
 from mcp_server.workflow import main_workflow
 
 presentation_router = APIRouter(
@@ -74,20 +76,27 @@ async def download_ppt(pprt_id: str) -> FileResponse | PresentationDownloadRespo
 
 @presentation_router.get("/test")
 async def test() -> None:
-    print("--- 1. Starting Live Test ---")
-    query = "cyberpunk city neon lights"
+    query = "effect of quantum computing on encryption standards"
 
-    # Call the function directly
-    file_path = get_stock_image(query)
+    print(f"🔎 Searching Live: '{query}'...")
+    print("   (This involves fetching URL metadata, so it might take 5-10 seconds)...")
 
-    # Validation
-    if "Error" in file_path:
-        print(f"❌ Failed: {file_path}")
-    elif os.path.exists(file_path):
-        size_kb = os.path.getsize(file_path) / 1024
-        print(f"✅ Success! Image saved at: {file_path}")
-        print(f"   Size: {size_kb:.2f} KB")
-        # Optional: Open the file to verify visually
-        # os.startfile(file_path) # Windows only
-    else:
-        print("❌ File path returned but file not found on disk.")
+    result = search_web(query)
+    data = json.loads(result)
+    logger.info(f"Data: {data}")
+    logger.info(f"Result: {result}")
+    if not data:
+        logger.error("❌ No Tier S/A results found (Filter might be too strict!)")
+        return
+
+    logger.info(f"\n✅ PASSED. Returning {len(data)} High-Quality Sources:\n")
+
+    for i, item in enumerate(data, 1):
+        v = item["validation"]
+        logger.info(
+            f"{i}. [{v['tier']}] Score: {v['score']} - {v['details'].get('author', 'No Author')}"
+        )
+        logger.info(f"   Url: {item['url']}")
+        logger.info(f"   Title/Snippet: {item['content'][:60]}...")
+        logger.info(f"   Content: {item['content']}")
+        logger.info("-" * 40)
