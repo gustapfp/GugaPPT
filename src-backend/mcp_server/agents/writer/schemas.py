@@ -4,6 +4,9 @@ from pydantic import BaseModel, Field
 class ChartData(BaseModel):
     labels: list[str]
     values: list[float]
+    unit: str = Field(
+        description="The unit of measurement (e.g., 'Billions USD', 'Millions', '%', 'Units Sold')"
+    )
 
     class Config:
         extra = "forbid"  # This ensures additionalProperties: false

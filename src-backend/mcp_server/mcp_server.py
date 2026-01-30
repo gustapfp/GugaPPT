@@ -206,6 +206,7 @@ def generate_chart(data_json: str, chart_type: str, title: str) -> str:
         data = json.loads(data_json)
         labels = data.get("labels", [])
         values = data.get("values", [])
+        unit = data.get("unit", "Values")
 
         if not labels or not values:
             raise ValueError("Error: JSON must contain 'labels' and 'values' lists.")
@@ -218,10 +219,11 @@ def generate_chart(data_json: str, chart_type: str, title: str) -> str:
         if chart_type.lower() == "bar":
             plt.bar(labels, values, color="#4F81BD")
             plt.xlabel("Categories")
-            plt.ylabel("Values")
+            plt.ylabel(unit)
 
         elif chart_type.lower() == "line":
             plt.plot(labels, values, marker="o", linestyle="-", color="#C0504D", linewidth=2)
+            plt.ylabel(unit)
             plt.grid(True, linestyle="--", alpha=0.7)
 
         elif chart_type.lower() == "pie":
@@ -235,6 +237,7 @@ def generate_chart(data_json: str, chart_type: str, title: str) -> str:
                 startangle=90,
                 colors=colors,
             )
+            plt.ylabel(unit)
         else:
             return f"Error: Unsupported chart type '{chart_type}'. Use 'bar', 'pie', or 'line'."
 

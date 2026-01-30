@@ -16,6 +16,9 @@ GUIDELINES:
    - Identify the slide with the most numerical or comparative data and generate a chart for it.
    - If the slide contains specific statistical data (e.g., "sales grew 20%"), create a 'visual_request' of type 'chart'.
      Format the 'data_json' strictly as {"labels": ["A", "B"], "values": [10, 20]}.
+    - When creating charts, ALWAYS include the 'unit' field in data_json specifying the measurement unit.
+     Format: {"labels": ["Q1", "Q2"], "values": [70, 74], "unit": "Revenue (Billions USD)"}
+   - Common units: "Billions USD", "Millions USD", "Percentage (%)", "Units", "Market Share (%)"
    - If no obvious statistical data exists in the research, synthesize a meaningful chart from the available information (e.g., comparison charts, trend data, key metrics, pros/cons).
    - If the slide is conceptual, create a 'visual_request' of type 'image' with a descriptive search prompt.
    - Do not force visuals on every slide, but ensure at least one slide has a chart.
