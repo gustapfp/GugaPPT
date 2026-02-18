@@ -13,7 +13,7 @@ On the **Home page** (`http://localhost:8000/`), you can use a simple web interf
 ## Folder Structure
 
 ```
-aristotle-challenge/
+gugappt/
   .env.example              # Example environment variables (TAVILY_API_KEY, OPENAI_API_KEY)
   .gitignore
   docker-compose.yml       # Compose file to run the backend in Docker
