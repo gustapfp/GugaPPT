@@ -1,6 +1,6 @@
-# Aristotle Challenge
+# GugaPPT - Gustavo's PowerPoint Generator
 
-GenAI take-home assignment: an application that generates PowerPoint presentations from a topic using an MCP (Model Context Protocol) server, multiple AI agents, and web research with source validation.
+An application that generates PowerPoint presentations from a topic using an MCP (Model Context Protocol) server, multiple AI agents, and web research with source validation.
 
 On the **Home page** (`http://localhost:8000/`), you can use a simple web interface to generate presentations interactively by entering a topic and choosing the number of slides. Once submitted, the generated PowerPoint file can be downloaded directly from the same page when ready.
 
