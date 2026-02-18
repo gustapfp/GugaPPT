@@ -42,7 +42,7 @@ class IllustratorAgent:
 
             try:
                 if req_type == "chart" and data:
-                    print(f"   > Generating chart for Slide {slide_num}...")
+                    logger.info(f"   > Generating chart for Slide {slide_num}...")
                     data_json_str = json.dumps(data) if isinstance(data, dict) else data
                     result = await session.call_tool(
                         "generate_chart",
@@ -63,6 +63,6 @@ class IllustratorAgent:
                     )
 
             except Exception as e:
-                print(f"Failed to create visual for Slide {slide_num}: {e}")
+                logger.error(f"Failed to create visual for Slide {slide_num}: {e}")
 
         return IllustrationResult(assets=generated_assets)
